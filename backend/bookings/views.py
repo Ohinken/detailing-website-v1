@@ -41,30 +41,30 @@ def get_slot_datetimes(booking):
     return start_dt, end_dt
 
 
-def send_owner_booking_email(booking):
-    subject = f"New booking: {booking.get_service_display()} on {booking.booking_date}"
+#def send_owner_booking_email(booking):
+    #subject = f"New booking: {booking.get_service_display()} on {booking.booking_date}"
 
-    message = (
-        f"New appointment booked for High Desert Auto Detail.\n\n"
-        f"Customer Name: {booking.customer_name}\n"
-        f"Phone: {booking.phone}\n"
-        f"Email: {booking.email or 'Not provided'}\n"
-        f"Vehicle: {booking.vehicle_make_model}\n"
-        f"Detail Location: {booking.detail_location}\n"
-        f"Service: {booking.get_service_display()}\n"
-        f"Price: ${booking.service_price}\n"
-        f"Date: {booking.booking_date}\n"
-        f"Time: {booking.get_time_slot_display()}\n"
-        f"Notes: {booking.notes or 'None'}\n"
-    )
+  #  message = (
+        #f"New appointment booked for High Desert Auto Detail.\n\n"
+        #f"Customer Name: {booking.customer_name}\n"
+       # f"Phone: {booking.phone}\n"
+       # f"Email: {booking.email or 'Not provided'}\n"
+       # f"Vehicle: {booking.vehicle_make_model}\n"
+        #f"Detail Location: {booking.detail_location}\n"
+        #f"Service: {booking.get_service_display()}\n"
+       # f"Price: ${booking.service_price}\n"
+       # f"Date: {booking.booking_date}\n"
+       # f"Time: {booking.get_time_slot_display()}\n"
+       # f"Notes: {booking.notes or 'None'}\n"
+ #   )
 
-    send_mail(
-        subject=subject,
-        message=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.BUSINESS_NOTIFICATION_EMAIL],
-        fail_silently=False,
-    )
+   # send_mail(
+     #   subject=subject,
+ #       message=message,
+ #       from_email=settings.DEFAULT_FROM_EMAIL,
+  #      recipient_list=[settings.BUSINESS_NOTIFICATION_EMAIL],
+ #       fail_silently=False,
+#    )
 
 
 def create_google_calendar_event(booking):
