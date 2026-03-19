@@ -117,7 +117,7 @@ def create_booking(request):
     serializer = BookingSerializer(data=request.data)
 
     if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         booking = serializer.save()
@@ -126,6 +126,9 @@ def create_booking(request):
             {"error": "That time slot is already booked."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    customer_email_error = None
+    owner_email_error = None
 
     if booking.email:
         subject = "Your High Desert Auto Detail booking is confirmed"
@@ -152,24 +155,24 @@ def create_booking(request):
                 recipient_list=[booking.email],
                 fail_silently=False,
             )
-        except Exception as email_error:
-            print(f"Customer confirmation email failed: {email_error}")
+        except Exception as e:
+            customer_email_error = str(e)
+            print(f"Customer confirmation email failed: {e}")
 
     try:
         send_owner_booking_email(booking)
-    except Exception as owner_email_error:
-        print(f"Owner booking email failed: {owner_email_error}")
-
-    # Google Calendar intentionally OFF for now
-    # try:
-    #     create_google_calendar_event(booking)
-    # except Exception as calendar_error:
-    #     print(f"Google Calendar event creation failed: {calendar_error}")
+    except Exception as e:
+        owner_email_error = str(e)
+        print(f"Owner booking email failed: {e}")
 
     return Response(
         {
             "message": "Booking created successfully.",
             "booking_id": booking.id,
+            "customer_email_sent": customer_email_error is None,
+            "owner_email_sent": owner_email_error is None,
+            "customer_email_error": customer_email_error,
+            "owner_email_error": owner_email_error,
         },
         status=status.HTTP_201_CREATED,
     )
