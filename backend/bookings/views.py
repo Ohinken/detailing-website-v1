@@ -1,18 +1,14 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
 from datetime import datetime
 
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import IntegrityError
 
-from .models import (
-    Booking,
-    WeeklyAvailability,
-    ClosedDate,
-    BlockedTimeSlot,
-)
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from .models import Booking, WeeklyAvailability, ClosedDate, BlockedTimeSlot
 from .serializers import BookingSerializer
 
 
@@ -54,50 +50,64 @@ def available_slots(request):
     date_str = request.GET.get("date")
 
     if not date_str:
-        return Response({"error": "Date is required."}, status=400)
+        return Response(
+            {"error": "date query parameter is required, format YYYY-MM-DD"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     try:
-        selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
-        return Response({"error": "Invalid date format."}, status=400)
+        return Response(
+            {"error": "invalid date format, use YYYY-MM-DD"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    weekday = selected_date.weekday()
+    weekday = booking_date.weekday()
 
     weekly_rule = WeeklyAvailability.objects.filter(day_of_week=weekday).first()
     if not weekly_rule or not weekly_rule.is_bookable:
         return Response(
             {
-                "is_bookable_day": False,
+                "date": date_str,
                 "available_slots": [],
+                "booked_slots": [],
+                "blocked_slots": [],
+                "is_bookable_day": False,
                 "message": "This day is not available for booking.",
             }
         )
 
-    if ClosedDate.objects.filter(date=selected_date).exists():
+    if ClosedDate.objects.filter(date=booking_date).exists():
         return Response(
             {
-                "is_bookable_day": False,
+                "date": date_str,
                 "available_slots": [],
-                "message": "This date is closed.",
+                "booked_slots": [],
+                "blocked_slots": [],
+                "is_bookable_day": False,
+                "message": "This date is closed for booking.",
             }
         )
 
-    booked_slots = Booking.objects.filter(booking_date=selected_date).values_list(
-        "time_slot", flat=True
+    booked_slots = set(
+        Booking.objects.filter(booking_date=booking_date).values_list("time_slot", flat=True)
     )
 
-    blocked_slots = BlockedTimeSlot.objects.filter(
-        date=selected_date
-    ).values_list("time_slot", flat=True)
+    blocked_slots = set(
+        BlockedTimeSlot.objects.filter(date=booking_date).values_list("time_slot", flat=True)
+    )
 
-    unavailable = set(booked_slots) | set(blocked_slots)
-
-    available = [slot for slot in ALL_SLOTS if slot["value"] not in unavailable]
+    unavailable_slots = booked_slots | blocked_slots
+    available = [slot for slot in ALL_SLOTS if slot["value"] not in unavailable_slots]
 
     return Response(
         {
-            "is_bookable_day": True,
+            "date": date_str,
             "available_slots": available,
+            "booked_slots": list(booked_slots),
+            "blocked_slots": list(blocked_slots),
+            "is_bookable_day": True,
         }
     )
 
@@ -107,7 +117,7 @@ def create_booking(request):
     serializer = BookingSerializer(data=request.data)
 
     if not serializer.is_valid():
-        return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     try:
         booking = serializer.save()
@@ -150,7 +160,7 @@ def create_booking(request):
     except Exception as owner_email_error:
         print(f"Owner booking email failed: {owner_email_error}")
 
-    # Google Calendar still OFF for now
+    # Google Calendar intentionally OFF for now
     # try:
     #     create_google_calendar_event(booking)
     # except Exception as calendar_error:
