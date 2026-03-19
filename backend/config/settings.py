@@ -1,25 +1,15 @@
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-import os
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
+# Static
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# Security
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
@@ -28,6 +18,11 @@ ALLOWED_HOSTS = [
     "localhost",
     "detailing-website-v1.onrender.com",
 ]
+
+# 🔥 FIX: Allow all origins (this fixes your hanging request)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# (Keep these for later when we tighten security again)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -35,12 +30,14 @@ CORS_ALLOWED_ORIGINS = [
     "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
     "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
 ]
+
 CSRF_TRUSTED_ORIGINS = [
     "https://project-g5v34.vercel.app",
     "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
     "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
 ]
-# Application definition
+
+# Storage
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -49,6 +46,8 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# Apps
 INSTALLED_APPS = [
     "corsheaders",
     "django.contrib.admin",
@@ -61,6 +60,7 @@ INSTALLED_APPS = [
     "bookings",
 ]
 
+# Middleware (⚠️ corsheaders MUST be first)
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -92,10 +92,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -103,54 +100,35 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
+# Auth
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
+# Localization
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "America/Denver"
-
 USE_I18N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_CREDENTIALS = True
 
+# Google Calendar
 GOOGLE_CALENDAR_ID = "owenhinken@gmail.com"
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
 
+# Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+
 DEFAULT_FROM_EMAIL = f"High Desert Auto Detail <{EMAIL_HOST_USER}>"
 BUSINESS_NOTIFICATION_EMAIL = EMAIL_HOST_USER
