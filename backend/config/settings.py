@@ -5,11 +5,9 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-# Static
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-# Security
+# -------------------------
+# BASIC SETTINGS
+# -------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
@@ -19,10 +17,27 @@ ALLOWED_HOSTS = [
     "detailing-website-v1.onrender.com",
 ]
 
-# 🔥 FIX: Allow all origins (this fixes your hanging request)
-CORS_ALLOW_ALL_ORIGINS = True
+# -------------------------
+# STATIC FILES
+# -------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-# (Keep these for later when we tighten security again)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# -------------------------
+# CORS / CSRF
+# -------------------------
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -37,17 +52,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
 ]
 
-# Storage
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
-# Apps
+# -------------------------
+# APPS
+# -------------------------
 INSTALLED_APPS = [
     "corsheaders",
     "django.contrib.admin",
@@ -60,7 +67,9 @@ INSTALLED_APPS = [
     "bookings",
 ]
 
-# Middleware (⚠️ corsheaders MUST be first)
+# -------------------------
+# MIDDLEWARE
+# -------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -92,15 +101,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# -------------------------
+# 🔥 DATABASE (FIXED)
+# -------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Auth
+if DATABASE_URL:
+    import dj_database_url
+
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    }
+else:
+    # fallback for local dev
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+# -------------------------
+# AUTH
+# -------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -108,7 +131,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Localization
+# -------------------------
+# LOCALIZATION
+# -------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/Denver"
 USE_I18N = True
@@ -116,13 +141,15 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOW_CREDENTIALS = True
-
-# Google Calendar
+# -------------------------
+# GOOGLE CALENDAR
+# -------------------------
 GOOGLE_CALENDAR_ID = "owenhinken@gmail.com"
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
 
-# Email
+# -------------------------
+# EMAIL
+# -------------------------
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
