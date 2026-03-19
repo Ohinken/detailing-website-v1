@@ -28,13 +28,18 @@ ALLOWED_HOSTS = [
     "localhost",
     "detailing-website-v1.onrender.com",
 ]
-
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your-vercel-site.vercel.app",
+    "https://project-g5v34.vercel.app",
+    "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
+    "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://project-g5v34.vercel.app",
+    "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
+    "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
+]
 # Application definition
 STORAGES = {
     "default": {
