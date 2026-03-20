@@ -15,41 +15,29 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "detailing-website-v1.onrender.com",
+    "highdesertautodetail.llc",
+    "www.highdesertautodetail.llc",
+    "project-g5v34-ftzp5apzn-ohinkens-projects.vercel.app",
 ]
-
-# -------------------------
-# STATIC FILES
-# -------------------------
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
 # -------------------------
 # CORS / CSRF
 # -------------------------
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://project-g5v34.vercel.app",
-    "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
-    "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
+    "https://highdesertautodetail.llc",
+    "https://www.highdesertautodetail.llc",
+    "https://project-g5v34-ftzp5apzn-ohinkens-projects.vercel.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://project-g5v34.vercel.app",
-    "https://project-g5v34-git-master-ohinkens-projects.vercel.app",
-    "https://project-g5v34-dcpo4jlk4-ohinkens-projects.vercel.app",
+    "https://highdesertautodetail.llc",
+    "https://www.highdesertautodetail.llc",
+    "https://project-g5v34-ftzp5apzn-ohinkens-projects.vercel.app",
 ]
 
 # -------------------------
