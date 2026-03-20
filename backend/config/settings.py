@@ -147,7 +147,7 @@ STORAGES = {
 # -------------------------
 # GOOGLE CALENDAR
 # -------------------------
-GOOGLE_CALENDAR_ID = "owenhinken@gmail.com"
+GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID")
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
 
 # -------------------------
