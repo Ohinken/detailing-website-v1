@@ -8,6 +8,9 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+
 from .models import Booking, WeeklyAvailability, ClosedDate, BlockedTimeSlot
 from .serializers import BookingSerializer
 
@@ -19,8 +22,8 @@ ALL_SLOTS = [
 ]
 
 
-# 🔥 ADD YOUR LOGO URL HERE
-LOGO_URL = "https://project-g5v34.vercel.app/emaillogo.png"
+# Use your live domain for the email logo
+LOGO_URL = "https://highdesertautodetail.llc/emaillogo.png"
 
 
 def send_mailgun_email(to_email, subject, text_message, html_message=None):
@@ -84,6 +87,62 @@ def send_owner_booking_email(booking):
         text_message=text_message,
         html_message=html_message,
     )
+
+
+def create_google_calendar_event(booking):
+    try:
+        scopes = ["https://www.googleapis.com/auth/calendar"]
+
+        credentials = service_account.Credentials.from_service_account_file(
+            settings.GOOGLE_SERVICE_ACCOUNT_FILE,
+            scopes=scopes,
+        )
+
+        service = build("calendar", "v3", credentials=credentials)
+
+        start_str, end_str = booking.time_slot.split("-")
+
+        start_datetime = datetime.strptime(
+            f"{booking.booking_date} {start_str}",
+            "%Y-%m-%d %H:%M",
+        )
+        end_datetime = datetime.strptime(
+            f"{booking.booking_date} {end_str}",
+            "%Y-%m-%d %H:%M",
+        )
+
+        event = {
+            "summary": f"{booking.get_service_display()} - {booking.customer_name}",
+            "location": booking.detail_location,
+            "description": (
+                f"Name: {booking.customer_name}\n"
+                f"Phone: {booking.phone}\n"
+                f"Email: {booking.email or 'Not provided'}\n"
+                f"Vehicle: {booking.vehicle_make_model}\n"
+                f"Service: {booking.get_service_display()}\n"
+                f"Price: ${booking.service_price}\n"
+                f"Notes: {booking.notes or 'None'}"
+            ),
+            "start": {
+                "dateTime": start_datetime.isoformat(),
+                "timeZone": "America/Denver",
+            },
+            "end": {
+                "dateTime": end_datetime.isoformat(),
+                "timeZone": "America/Denver",
+            },
+        }
+
+        service.events().insert(
+            calendarId=settings.GOOGLE_CALENDAR_ID,
+            body=event,
+        ).execute()
+
+        return True, None
+
+    except Exception as e:
+        print(f"Google Calendar error: {e}")
+        return False, str(e)
 
 
 @api_view(["GET"])
@@ -168,21 +227,22 @@ def create_booking(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    calendar_success, calendar_error = create_google_calendar_event(booking)
+
     customer_email_error = None
     owner_email_error = None
 
-    # ✅ CUSTOMER EMAIL
     if booking.email:
         subject = "Your High Desert Auto Detail booking is confirmed"
 
         text_message = f"""
-        Hi {booking.customer_name},
+Hi {booking.customer_name},
 
-        Your booking is confirmed!
+Your booking is confirmed!
 
-        Date: {booking.booking_date}
-        Time: {booking.get_time_slot_display()}
-        """
+Date: {booking.booking_date}
+Time: {booking.get_time_slot_display()}
+"""
 
         html_message = build_email_html("Booking Confirmed", booking)
 
@@ -197,7 +257,6 @@ def create_booking(request):
             customer_email_error = str(e)
             print(f"Customer confirmation email failed: {e}")
 
-    # ✅ OWNER EMAIL
     try:
         send_owner_booking_email(booking)
     except Exception as e:
@@ -208,6 +267,8 @@ def create_booking(request):
         {
             "message": "Booking created successfully.",
             "booking_id": booking.id,
+            "calendar_event_created": calendar_success,
+            "calendar_error": calendar_error,
             "customer_email_sent": customer_email_error is None,
             "owner_email_sent": owner_email_error is None,
         },

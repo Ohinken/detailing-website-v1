@@ -325,10 +325,33 @@ if (!email.trim()) {
     });
 
     const data = await response.json();
+console.log("create booking response:", data);
 
-    if (!response.ok) {
-      throw new Error(data.error || "Booking failed.");
+if (!response.ok) {
+  let message = "Booking failed.";
+
+  if (typeof data?.error === "string") {
+    message = data.error;
+  } else if (Array.isArray(data?.error) && data.error.length > 0) {
+    message = String(data.error[0]);
+  } else if (data?.error && typeof data.error === "object") {
+    const firstValue = Object.values(data.error)[0];
+    if (Array.isArray(firstValue) && firstValue.length > 0) {
+      message = String(firstValue[0]);
+    } else if (typeof firstValue === "string") {
+      message = firstValue;
     }
+  } else if (data && typeof data === "object") {
+    const firstValue = Object.values(data)[0];
+    if (Array.isArray(firstValue) && firstValue.length > 0) {
+      message = String(firstValue[0]);
+    } else if (typeof firstValue === "string") {
+      message = firstValue;
+    }
+  }
+
+  throw new Error(message);
+}
 
     setBookingSuccess("Booking submitted successfully.");
     setCustomerName("");
