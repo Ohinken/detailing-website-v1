@@ -20,7 +20,7 @@ ALL_SLOTS = [
 
 
 # 🔥 ADD YOUR LOGO URL HERE
-LOGO_URL = "https://yourdomain.com/logo.png"
+LOGO_URL = "https://project-g5v34.vercel.app/emaillogo.png"
 
 
 def send_mailgun_email(to_email, subject, text_message, html_message=None):
