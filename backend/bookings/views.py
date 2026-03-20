@@ -1,7 +1,7 @@
 from datetime import datetime
 
+import requests
 from django.conf import settings
-from django.core.mail import send_mail
 from django.db import IntegrityError
 
 from rest_framework import status
@@ -17,6 +17,23 @@ ALL_SLOTS = [
     {"value": "11:30-01:30", "label": "11:30 AM - 1:30 PM"},
     {"value": "02:00-04:00", "label": "2:00 PM - 4:00 PM"},
 ]
+
+
+def send_mailgun_email(to_email, subject, text_message):
+    response = requests.post(
+        f"{settings.MAILGUN_BASE_URL}/v3/{settings.MAILGUN_DOMAIN}/messages",
+        auth=("api", settings.MAILGUN_API_KEY),
+        data={
+            "from": f"High Desert Auto Detail <{settings.DEFAULT_FROM_EMAIL}>",
+            "to": [to_email],
+            "subject": subject,
+            "text": text_message,
+        },
+        timeout=20,
+    )
+
+    response.raise_for_status()
+    return response
 
 
 def send_owner_booking_email(booking):
@@ -36,12 +53,10 @@ def send_owner_booking_email(booking):
         f"Notes: {booking.notes or 'None'}\n"
     )
 
-    send_mail(
+    return send_mailgun_email(
+        to_email=settings.BUSINESS_NOTIFICATION_EMAIL,
         subject=subject,
-        message=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[settings.BUSINESS_NOTIFICATION_EMAIL],
-        fail_silently=False,
+        text_message=message,
     )
 
 
@@ -141,19 +156,19 @@ def create_booking(request):
             f"Time: {booking.get_time_slot_display()}\n"
             f"Vehicle: {booking.vehicle_make_model}\n"
             f"Detail Location: {booking.detail_location}\n"
-            f"Price: ${booking.service_price}\n\n"
+            f"Price: ${booking.service_price}\n"
+            f"Phone: {booking.phone}\n"
+            f"Notes: {booking.notes or 'None'}\n\n"
             f"If you need to make any changes, please contact us.\n\n"
             f"High Desert Auto Detail\n"
             f"(505) 401-6071"
         )
 
         try:
-            send_mail(
+            send_mailgun_email(
+                to_email=booking.email,
                 subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[booking.email],
-                fail_silently=False,
+                text_message=message,
             )
         except Exception as e:
             customer_email_error = str(e)
