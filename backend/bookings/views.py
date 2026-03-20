@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import json
 import requests
 from django.conf import settings
 from django.db import IntegrityError
@@ -93,8 +93,10 @@ def create_google_calendar_event(booking):
     try:
         scopes = ["https://www.googleapis.com/auth/calendar"]
 
-        credentials = service_account.Credentials.from_service_account_file(
-            settings.GOOGLE_SERVICE_ACCOUNT_FILE,
+        service_account_info = json.loads(settings.GOOGLE_SERVICE_ACCOUNT_JSON)
+
+        credentials = service_account.Credentials.from_service_account_info(
+            service_account_info,
             scopes=scopes,
         )
 
