@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "High Desert Auto Detail",
+  title: "High Desert Auto Detail | Albuquerque NM",
   description: "Mobile auto detailing in Albuquerque. We come to your home or office. Professional results, convenient service.",
 };
 
